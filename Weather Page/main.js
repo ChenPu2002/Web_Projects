@@ -349,12 +349,6 @@ fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrr
     imageelement3.style.height = '20px';
     var mm = document.getElementById('mm');
     mm.appendChild(imageelement3);
-    //document.getElementById('rainfall').textContent = `Rainfall: ${data.rainfall.data[13].max}mm`;
-    // var imageelement3 = document.createElement('img');
-    // imageelement3.src = 'images/rain-48.png';
-    // imageelement3.style.width = '20px';
-    // imageelement3.style.height = '20px';
-    // selectElement3.appendChild(imageelement3);
 
     var uv = document.getElementById('uv-index');
     //console.log(data.uvindex);
@@ -407,28 +401,12 @@ fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrr
           warningMessage.setAttribute("style",  "color: black !important;");
           warningMessage.style.display = 'block';}
       } else {
-        //content.style.display = 'none';
-        //place.style.display = 'none';
-        //uv.style.display = 'flex';
-        //const war = 'Warning';
-        //war.style.fontSize = 'larger';
         warningMessage.style.display = 'none';
       }
-      // var selectElement = document.getElementById("station");
-      // var selectedvalue = selectElement.value;
-
-      // selectElement.addEventListener("change", function(event) {
-      //   let selectedValue = event.target.value;
-      //   console.log(selectedValue);
     });
 
    });
-  //})
-  // .catch(error => {
-  //   console.error('An error occurred:', error);
-  // });
-    //fetch('data/weather.Oct7.json')
-    //fetch('data/weather.Sep27.json')
+
     fetch("https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en")
     .then(response => response.json())
     .then(data => {
@@ -488,23 +466,8 @@ fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrr
         select2.appendChild(optionElement);
       });
     }
-
-    // selectElement = document.getElementById("station");
-    //   selectedvalue = selectElement.value;
-    //   selectElement.addEventListener("change", function(event) {
-    //     selectedvalue = event.target.value;
-    //   });
-    //fetch('data/weather.Sep27.json')
     fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en')
     .then(response => response.json())
-    // .then(data => {
-    //   selectElement = document.getElementById("station");
-    //   selectedvalue = selectElement.value;
-    //   selectElement.addEventListener("change", function(event) {
-    //     selectedvalue = event.target.value;
-    //   });
-    //   // console.log(selectedvalue);
-    // })
     .then(data => {
 
       selectElement1 = document.getElementById("station1");
@@ -567,13 +530,6 @@ fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&
     weatherData = [];
     dayweatherdata = [];
     for (var i = 0; i < 9; i++) {
-      // dayweatherdata = {'week': WF.weatherForecast[i].week, 
-      //                   'date': WF.weatherForecast[i].forecastDate, 
-      //                   'icon': WF.weatherForecast[i].ForecastIcon, 
-      //                   'psr': WF.weatherForecast[i].PSR, 
-      //                   'temp': `${WF.weatherForecast[i].forecastMintemp.value}-${WF.weatherForecast[i].forecastMaxtemp.value}\u00B0C`,
-      //                   'humidity': `${WF.weatherForecast[i].forecastMinrh.value}-${WF.weatherForecast[i].forecastMaxrh.value}%`,
-      //                  }
       var weekString = WF.weatherForecast[i].week;
 
       var weekDayMap = {
@@ -731,59 +687,6 @@ async function getLocation() {
 
 getLocation()
   .then(() => {
-    // var mediaQuery = window.matchMedia('(max-width: 500px)');
-    // if (mediaQuery.matches) {
-    //   document.getElementById('tempquery').addEventListener('click', (evt) => {
-    //     var element = document.getElementById("queryblock1");
-    //     var computedStyle = window.getComputedStyle(element);
-    //     var displayValue = computedStyle.getPropertyValue("display");
-    //     if (displayValue == 'block') {
-    //     return;
-    //     }
-    //     else{
-    //       document.getElementById('queryblock2').style.setProperty('display', 'none','important');
-    //       document.getElementById('Rainfall').style.setProperty("height", "8vh");
-    //       document.getElementById('queryblock3').style.setProperty('display', 'none','important');
-    //       document.getElementById('AirQuality').style.setProperty("height", "8vh");
-    //       document.getElementById('queryblock1').style.setProperty('display', 'block','important');
-    //       document.getElementById('Temperature').style.setProperty("height", "35vh");
-    //     }
-    //     });
-    
-    //     document.getElementById('rainquery').addEventListener('click', (evt) => {
-    //       var element = document.getElementById("queryblock2");
-    //       var computedStyle = window.getComputedStyle(element);
-    //       var displayValue = computedStyle.getPropertyValue("display");
-    //       if (displayValue == 'block') {
-    //       return;
-    //       }
-    //       else{
-    //         document.getElementById('queryblock1').style.setProperty('display', 'none','important');
-    //         document.getElementById('Temperature').style.setProperty("height", "8vh","important");
-    //         document.getElementById('queryblock3').style.setProperty('display', 'none','important');
-    //         document.getElementById('AirQuality').style.setProperty("height", "8vh","important");
-    //         document.getElementById('queryblock2').style.setProperty('display', 'block','important');
-    //         document.getElementById('Rainfall').style.setProperty("height", "35vh");
-    //       }
-    //     });
-    
-    //     document.getElementById('airquery').addEventListener('click', (evt) => {
-    //       var element = document.getElementById("queryblock3");
-    //       var computedStyle = window.getComputedStyle(element);
-    //       var displayValue = computedStyle.getPropertyValue("display");
-    //       if (displayValue == 'block') {
-    //       return;
-    //       }
-    //       else{
-    //         document.getElementById('queryblock1').style.setProperty('display', 'none');
-    //         document.getElementById('Temperature').style.setProperty("height", "8vh","important");
-    //         document.getElementById('queryblock2').style.setProperty('display', 'none');
-    //         document.getElementById('Rainfall').style.setProperty("height", "8vh","important");
-    //         document.getElementById('queryblock3').style.setProperty('display', 'block','important');
-    //         document.getElementById('AirQuality').style.setProperty("height", "35vh");
-    //       }
-    //     });
-    //   }
     function fetchlocationinfo(){
       return fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+latitude+'&lon='+longitude+'&zoom=18&addressdetails=1&accept-language=en-US')
       .then(response => response.json())
@@ -1095,230 +998,11 @@ getLocation()
       
       return minstation;
     }
-    // let selection1 = 'tempquery';
-    // let selected1 = 'queryblock1';
-
-    // //let select = document.querySelectorAll("#Temperature","#Rainfall","#AirQuality");
-    // let select1 = document.getElementById('tempquery');
-
-    // document.getElementById('tempquery').addEventListener('click', (evt) => {
-    //   var element = document.getElementById("queryblock1");
-    //   var computedStyle = window.getComputedStyle(element);
-    //   var displayValue = computedStyle.getPropertyValue("display");
-    //   if (displayValue == 'block') {
-    //   return;
-    //   }
-    //   else{
-    //     document.getElementById('queryblock2').style.setProperty('display', 'none','important');
-    //     document.getElementById('Rainfall').style.setProperty("height", "8vh","important");
-    //     document.getElementById('queryblock3').style.setProperty('display', 'none','important');
-    //     document.getElementById('AirQuality').style.setProperty("height", "8vh","important");
-    //     document.getElementById('queryblock1').style.setProperty('display', 'block','important');
-    //     document.getElementById('Temperature').style.setProperty("height", "35vh","important");
-    //   }
-    //   });
-  
-    //   document.getElementById('rainquery').addEventListener('click', (evt) => {
-    //     var element = document.getElementById("queryblock2");
-    //     var computedStyle = window.getComputedStyle(element);
-    //     var displayValue = computedStyle.getPropertyValue("display");
-    //     if (displayValue == 'block') {
-    //     return;
-    //     }
-    //     else{
-    //       document.getElementById('queryblock1').style.setProperty('display', 'none','important');
-    //       document.getElementById('Temperature').style.setProperty("height", "8vh","important");
-    //       document.getElementById('queryblock3').style.setProperty('display', 'none','important');
-    //       document.getElementById('AirQuality').style.setProperty("height", "8vh","important");
-    //       document.getElementById('queryblock2').style.setProperty('display', 'block','important');
-    //       document.getElementById('Rainfall').style.setProperty("height", "35vh","important");
-    //     }
-    //   });
-  
-    //   document.getElementById('airquery').addEventListener('click', (evt) => {
-    //     var element = document.getElementById("queryblock3");
-    //     var computedStyle = window.getComputedStyle(element);
-    //     var displayValue = computedStyle.getPropertyValue("display");
-    //     if (displayValue == 'block') {
-    //     return;
-    //     }
-    //     else{
-    //       document.getElementById('queryblock1').style.setProperty('display', 'none','important');
-    //       document.getElementById('Temperature').style.setProperty("height", "8vh","important");
-    //       document.getElementById('queryblock2').style.setProperty('display', 'none','important');
-    //       document.getElementById('Rainfall').style.setProperty("height", "8vh","important");
-    //       document.getElementById('queryblock3').style.setProperty('display', 'block','important');
-    //       document.getElementById('AirQuality').style.setProperty("height", "35vh","important");
-    //     }
-    //   });
-    // switch (evt.target.id) {
-    // case 'Temperature':
-    // document.getElementById(selected).style.display = 'none';
-    // selection = 'Temperature';
-    // selected = 'queryblock1';
-    // document.getElementById('queryblock1').style.display = 'block';
-    // break;
-    // case 'Rainfall':
-    // document.getElementById(selected).style.display = 'none';
-    // selection = 'Rainfall';
-    // selected = 'queryblock2';
-    // document.getElementById('queryblock2').style.display = 'block';
-    // break;
-    // case 'airquery':
-    // document.getElementById(selected).style.setProperty('display', 'none','important');
-    // document.getElementById(selection).style.setProperty("height", "8%","important");
-    // selection = 'AirQuality';
-    // selected = 'queryblock3';
-    // document.getElementById('queryblock3').style.setProperty('display', 'block','important');
-    // document.getElementById(selection).style.setProperty("height", "35vh","important");
-    // break;
-    // }
-    //});
-
     })
     .catch(error => {
       console.log(error);
     });
   })
-
-  //   fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+latitude+'&lon='+longitude+'&zoom=18&addressdetails=1&accept-language=en-US')
-  //   .then(response => response.json())
-  //   .then(data => {
-  //     var lodata = data.address; 
-  //     if ('suburb' in lodata){
-  //       suburb = lodata.suburb;
-  //     }
-  //     else if('borough_field' in lodata){
-  //       suburb = lodata.borough_field;
-  //     }
-  //     else if('town_field' in lodata){
-  //       suburb = lodata.town_field;
-  //     }
-  //     else{
-  //       return suburb = 'Unknown';
-  //     }
-
-  //     if ('city_district' in lodata){
-  //       district = lodata.city_district;
-  //     }
-  //     else if ('borough_field' in lodata){
-  //       district = lodata.borough_field;
-  //     }
-  //     else if('town_field' in lodata){
-  //       district = lodata.town_field;
-  //     }
-  //     else{
-  //       return district = 'Unknown';
-  //     }
-      
-  //     document.getElementById('currlocation').textContent = suburb + ', ' + district;
-  //     //console.log(suburb, district);
-  //   })
-  //   .catch(error => {
-  //     console.error('error:', error);
-  //   });
-    
-  //   function fetchData() {
-  //     return fetch('https://ogciopsi.blob.core.windows.net/dataset/weather-station/weather-station-info.json')
-  //       .then(response => response.json())
-  //       .then(data => {
-  //         return logdata(data);
-  //       })
-  //       .catch(error => {
-  //         console.error('error:', error);
-  //         throw error;
-  //       });
-  //   }
-    
-  //   function logdata(data) {
-  //     var stationlist = [];
-  //     data.forEach(function(item) {
-  //       var station = [];
-  //       const λ2 = item.longitude * Math.PI / 180;
-  //       const φ2 = item.latitude * Math.PI / 180;
-  //       const λ1 = longitude * Math.PI / 180;
-  //       const φ1 = latitude * Math.PI / 180;
-  //       const x = (λ2 - λ1) * Math.cos((φ1 + φ2) / 2);
-  //       const y = (φ2 - φ1);
-  //       const d = Math.sqrt(x * x + y * y);
-  //       if (item.station_name_en == 'Tsuen Wan') {
-  //         item.station_name_en = 'Tsuen Wan Ho Koon';
-  //         station.push(item.station_name_en);
-  //       } else {
-  //         station.push(item.station_name_en);
-  //       }
-  //       station.push(d);
-  //       stationlist.push(station);
-  //     });
-    
-  //     var minstation = [stationlist[0][0], stationlist[0][1]];
-  //     for (var i = 0; i < stationlist.length; i++) {
-  //       if (stationlist[i][1] < minstation[1]) {
-  //         minstation[0] = stationlist[i][0];
-  //         minstation[1] = stationlist[i][1];
-  //       }
-  //     }
-      
-  //     return minstation;
-  //   }
-    
-  //   // 调用 fetchData 函数并在外部访问内部变量
-  //   async function getminstation() {
-  //     try {
-  //       const result = await fetchData();
-  //       return result;
-  //     } catch (error) {
-  //       console.error(error);
-  //       throw error;
-  //     }
-  //   }
-    
-  //   getminstation()
-  //     .then(result => {
-  //       fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en')
-  //       .then(response => response.json())
-  //       .then(data => {
-  //         var selectElement1 = document.getElementById("culotemp");
-  //         var selectElement2 = document.getElementById("culorain");
-  //         var selectedvalue1 = result[0];
-  //         var output = document.getElementById("currlocation");
-  //         const pText = output.textContent;
-  //         const commaIndex = pText.indexOf(","); // 查找逗号的位置
-  //         const extracted = pText.substring(commaIndex + 2);
-  //         var selectedvalue2 = extracted;
-  //         console.log(selectedvalue2);
-  //         gottemp = findtemp(data, selectedvalue1, content="temperature",);
-  //         selectElement1.innerHTML = gottemp+'\u00B0C';
-  //         gotrain = findrain(data, selectedvalue2, content="rainfall");
-  //         selectElement2.innerHTML = gotrain+"mm";
-  //         });  
-  //         function findtemp(data,selectedvalue,content){
-
-  //           var data = data[content].data;
-  //           for (var i = 0; i < data.length; i++) {
-  //             var item = data[i];
-  //             if (item["place"] === selectedvalue) {
-  //               return item.value;
-  //             }
-  //           }
-  //           return null;
-  //         };
-  //         function findrain(data,selectedvalue,content){
-    
-  //           var data = data[content].data;
-  //           for (var i = 0; i < data.length; i++) {
-  //             var item = data[i];
-  //             if (item["place"] === selectedvalue) {
-  //               return item.max;
-  //             }
-  //           }
-  //           return null;
-  //         };
-  //       })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
-
 });
 
 
