@@ -665,253 +665,14 @@ function findair(data,selectedvalue){
 
 
 
-// ============ 重构的工具函数 ============
-
-// 带超时和重试的fetch函数
-async function fetchWithTimeoutAndRetry(url, options = {}, timeout = 8000, maxRetries = 2) {
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), timeout);
-      
-      const response = await fetch(url, {
-        ...options,
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      return response;
-    } catch (error) {
-      console.warn(`Attempt ${attempt + 1} failed for ${url}:`, error.message);
-      if (attempt === maxRetries) {
-        throw new Error(`Failed after ${maxRetries + 1} attempts: ${error.message}`);
-      }
-      // 指数退避
-      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
-    }
-  }
-}
-
-// 重构的地理位置获取函数（带超时控制）
-function getCurrentPositionWithTimeout(timeout = 10000) {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('Geolocation API is not available'));
-      return;
-    }
-    
-    const options = {
-      timeout: timeout,
-      maximumAge: 300000, // 5分钟内的缓存位置可用
-      enableHighAccuracy: false // 降低精度要求以提高速度
-    };
-    
-    navigator.geolocation.getCurrentPosition(resolve, reject, options);
-  });
-}
-
-// 显示加载状态
-function showLoadingState(elementId, message = 'Loading...') {
-  const element = document.getElementById(elementId);
-  if (element) {
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'loading-indicator';
-    loadingDiv.innerHTML = `<div style="text-align: center; padding: 10px; color: #666;">${message}</div>`;
-    element.appendChild(loadingDiv);
-  }
-}
-
-// 隐藏加载状态
-function hideLoadingState(elementId) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    const loadingElements = element.querySelectorAll('.loading-indicator');
-    loadingElements.forEach(el => el.remove());
-  }
-}
-
-// 显示错误信息
-function showErrorMessage(message, elementId = null) {
-  console.error('Weather App Error:', message);
-  if (elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-      element.innerHTML = `<div style="color: red; text-align: center; padding: 10px;">${message}</div>`;
-    }
-  }
-}
-
 function getCurrentPosition() {
-  return getCurrentPositionWithTimeout();
-}
-
-// ============ 重构的API调用函数 ============
-
-// 获取位置信息
-async function getLocationInfo(lat, lon) {
-  const response = await fetchWithTimeoutAndRetry(
-    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1&accept-language=en-US`
-  );
-  return response.json();
-}
-
-// 获取当前天气数据
-async function getCurrentWeatherData() {
-  const response = await fetchWithTimeoutAndRetry(
-    'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en'
-  );
-  return response.json();
-}
-
-// 获取天气预报数据
-async function getForecastData() {
-  const response = await fetchWithTimeoutAndRetry(
-    'https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=fnd&lang=en'
-  );
-  return response.json();
-}
-
-// 获取天气站信息
-async function getWeatherStations() {
-  const response = await fetchWithTimeoutAndRetry(
-    'https://ogciopsi.blob.core.windows.net/dataset/weather-station/weather-station-info.json'
-  );
-  return response.json();
-}
-
-// 获取空气质量数据
-async function getAirQualityData() {
-  const response = await fetchWithTimeoutAndRetry(
-    'https://dashboard.data.gov.hk/api/aqhi-individual?format=json'
-  );
-  return response.json();
-}
-
-// 获取空气质量站点信息
-async function getAQHIStationInfo() {
-  const response = await fetchWithTimeoutAndRetry(
-    'data/aqhi-station-info.json'
-  );
-  return response.json();
-}
-
-// 处理地址数据
-function processLocationData(locationData) {
-  const lodata = locationData.address;
-  let suburb, district;
-  
-  // 处理suburb
-  if ('suburb' in lodata) {
-    suburb = lodata.suburb;
-  } else if ('borough' in lodata) {
-    suburb = lodata.borough;
-  } else if ('town' in lodata) {
-    suburb = lodata.town;
-  } else {
-    suburb = 'Unknown';
-  }
-  
-  // 处理district
-  if ('city_district' in lodata) {
-    district = lodata.city_district;
-  } else {
-    district = '';
-    for (var key in lodata) {
-      if (lodata.hasOwnProperty(key)) {
-        var value = lodata[key];
-        if (value.includes('District')) {
-          district = value;
-          break;
-        }
-      }
-    }
-    if (!district) district = 'Unknown';
-  }
-  
-  return { suburb, district };
-}
-
-// 查找最近的天气站
-function findNearestWeatherStation(stations, position) {
-  const { latitude, longitude } = position.coords;
-  let minStation = null;
-  let minDistance = Infinity;
-  
-  stations.forEach(function(item) {
-    const λ2 = item.longitude * Math.PI / 180;
-    const φ2 = item.latitude * Math.PI / 180;
-    const λ1 = longitude * Math.PI / 180;
-    const φ1 = latitude * Math.PI / 180;
-    const x = (λ2 - λ1) * Math.cos((φ1 + φ2) / 2);
-    const y = (φ2 - φ1);
-    const distance = Math.sqrt(x * x + y * y);
-    
-    if (distance < minDistance) {
-      minDistance = distance;
-      let stationName = item.station_name_en;
-      if (stationName === 'Tsuen Wan') {
-        stationName = 'Tsuen Wan Ho Koon';
-      }
-      minStation = { name: stationName, distance: distance };
+  return new Promise((resolve, reject) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(resolve, reject);
+    } else {
+      reject('Geolocation API is not available');
     }
   });
-  
-  return minStation;
-}
-
-// 查找最近的空气质量站
-function findNearestAQHIStation(stations, position) {
-  const { latitude, longitude } = position.coords;
-  let minStation = null;
-  let minDistance = Infinity;
-  
-  stations.forEach(function(item) {
-    const λ2 = item.lng * Math.PI / 180;
-    const φ2 = item.lat * Math.PI / 180;
-    const λ1 = longitude * Math.PI / 180;
-    const φ1 = latitude * Math.PI / 180;
-    const x = (λ2 - λ1) * Math.cos((φ1 + φ2) / 2);
-    const y = (φ2 - φ1);
-    const distance = Math.sqrt(x * x + y * y);
-    
-    if (distance < minDistance) {
-      minDistance = distance;
-      minStation = { name: item.station, distance: distance };
-    }
-  });
-  
-  return minStation;
-}
-
-// 标准化地区名称
-function normalizeDistrictName(district) {
-  const districtMap = {
-    'Central and Western District': 'Central & Western District',
-    'Tuen Mun District': 'Tuen Mun',
-    'Yuen Long Park': 'Yuen Long',
-    'Sha Tin District': 'Sha Tin',
-    'Tai Po District': 'Tai Po',
-    'Tsuen Wan District': 'Tsuen Wan',
-    'Kwai Tsing District': 'Kwai Tsing',
-    'Wong Tai Sin District': 'Wong Tai Sin',
-    'Kwun Tong District': 'Kwun Tong',
-    'Sham Shui Po District': 'Sham Shui Po',
-    'Kowloon City District': 'Kowloon City',
-    'Wan Chai District': 'Wan Chai',
-    'Sai Kung District': 'Sai Kung',
-    'Yau Tsim Mong District': 'Yau Tsim Mong',
-    'Southern District': 'Southern',
-    'Eastern District': 'Eastern',
-    'Islands District': 'Islands',
-    'North District': 'North'
-  };
-  
-  return districtMap[district] || district;
 }
 
 async function getLocation() {
@@ -924,179 +685,325 @@ async function getLocation() {
   }
 }
 
-// ============ 重构后的主函数：消除回调地狱 ============
+getLocation()
+  .then(() => {
+    function fetchlocationinfo(){
+      return fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+latitude+'&lon='+longitude+'&zoom=18&addressdetails=1&accept-language=en-US')
+      .then(response => response.json())
+      .then(data => {
+        //console.log(data);
+        var lodata = data.address; 
+        if ('suburb' in lodata){
+          suburb = lodata.suburb;
+        }
+        else if('borough' in lodata){
+          suburb = lodata.borough;
+        }
+        else if('town' in lodata){
+          suburb = lodata.town;
+        }
+        else{
+          suburb = 'Unknown';
+        }
 
-// 主要的初始化函数，使用async/await重构
-async function initializeWeatherPage() {
-  try {
-    // 第1步：显示加载状态
-    showLoadingState('currlocation', '正在获取位置...');
-    
-    // 第2步：获取用户位置
-    const position = await getCurrentPositionWithTimeout();
-    latitude = position.coords.latitude;
-    longitude = position.coords.longitude;
-    
-    // 第3步：并行获取基础数据
-    showLoadingState('culotemp', '正在加载天气数据...');
-    showLoadingState('culorain', '正在加载降雨数据...');
-    showLoadingState('culoair', '正在加载空气质量...');
-    
-    const [locationData, weatherStations, currentWeather, aqhiStations] = await Promise.allSettled([
-      getLocationInfo(latitude, longitude),
-      getWeatherStations(),
-      getCurrentWeatherData(),
-      getAQHIStationInfo()
-    ]);
-    
-    // 第4步：处理位置数据
-    if (locationData.status === 'fulfilled') {
-      const location = processLocationData(locationData.value);
-      document.getElementById('currlocation').textContent = location.suburb + ', ' + location.district;
-      hideLoadingState('currlocation');
+        if ('city_district' in lodata){
+          district = lodata.city_district;
+        }
+        else if(!('city_district' in lodata)){
+          district = '';
+          //console.log(lodata);
+          for (var key in lodata) {
+            if (lodata.hasOwnProperty(key)) {
+              var value = lodata[key];
+              if (value.includes('District')) {
+                // var parts = value.split(' '); 
+                // var result = parts.slice(0, -1).join(' ');
+                district = value;
+                break;
+              }
+            }
+          }
+
+        }
+        else{
+          district = 'Unknown';
+        }
+        //console.log(suburb, district);
+        document.getElementById('currlocation').textContent = suburb + ', ' + district;
+        return district;
+      })
+    };
+    async function getminstation() {
+      try {
+        const result = await fetchlocationinfo();
+        return result;
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
+    }
+
+    getminstation()
+    .then(districtawait => {
+      function fetchData() {
+        return fetch('https://ogciopsi.blob.core.windows.net/dataset/weather-station/weather-station-info.json')
+          .then(response => response.json())
+          .then(data => {
+            return logdata(data);
+          })
+          .catch(error => {
+            console.error('error:', error);
+            throw error;
+          });
+      }
       
-      // 第5步：查找最近的天气站
-      if (weatherStations.status === 'fulfilled') {
-        const nearestWeatherStation = findNearestWeatherStation(weatherStations.value, position);
+      function logdata(data) {
+        var stationlist = [];
+        data.forEach(function(item) {
+          var station = [];
+          const λ2 = item.longitude * Math.PI / 180;
+          const φ2 = item.latitude * Math.PI / 180;
+          const λ1 = longitude * Math.PI / 180;
+          const φ1 = latitude * Math.PI / 180;
+          const x = (λ2 - λ1) * Math.cos((φ1 + φ2) / 2);
+          const y = (φ2 - φ1);
+          const d = Math.sqrt(x * x + y * y);
+          if (item.station_name_en == 'Tsuen Wan') {
+            item.station_name_en = 'Tsuen Wan Ho Koon';
+            station.push(item.station_name_en);
+          } else {
+            station.push(item.station_name_en);
+          }
+          station.push(d);
+          stationlist.push(station);
+        });
+      
+        var minstation = [stationlist[0][0], stationlist[0][1]];
+        for (var i = 0; i < stationlist.length; i++) {
+          if (stationlist[i][1] < minstation[1]) {
+            minstation[0] = stationlist[i][0];
+            minstation[1] = stationlist[i][1];
+          }
+        }
         
-        // 第6步：获取特定位置的天气数据
-        if (currentWeather.status === 'fulfilled' && nearestWeatherStation) {
-          const normalizedDistrict = normalizeDistrictName(location.district);
-          
-          // 查找温度数据
-          const tempData = findDataByPlace(currentWeather.value, nearestWeatherStation.name, 'temperature');
-          if (tempData) {
-            updateTemperatureDisplay(tempData.value);
-            hideLoadingState('culotemp');
-          } else {
-            showErrorMessage('温度数据不可用', 'culotemp');
-          }
-          
-          // 查找降雨数据
-          const rainData = findDataByPlace(currentWeather.value, normalizedDistrict, 'rainfall');
-          if (rainData) {
-            updateRainfallDisplay(rainData.max);
-            hideLoadingState('culorain');
-          } else {
-            showErrorMessage('降雨数据不可用', 'culorain');
-          }
+        return minstation;
+      }
+      
+      // 调用 fetchData 函数并在外部访问内部变量
+      async function getminstation1() {
+        try {
+          const result = await fetchData();
+          return result;
+        } catch (error) {
+          console.error(error);
+          throw error;
         }
       }
       
-      // 第7步：处理空气质量数据
-      if (aqhiStations.status === 'fulfilled') {
-        await processAirQualityData(aqhiStations.value, position);
-      } else {
-        showErrorMessage('空气质量站点信息不可用', 'culoair');
-      }
-    } else {
-      showErrorMessage('位置信息获取失败', 'currlocation');
-    }
-    
-  } catch (error) {
-    console.error('Weather page initialization failed:', error);
-    showErrorMessage('天气数据加载失败，请刷新页面重试');
-  }
-}
+      getminstation1()
+        .then(result => {
+          fetch('https://data.weather.gov.hk/weatherAPI/opendata/weather.php?dataType=rhrread&lang=en')
+          .then(response => response.json())
+          .then(data => {
+            var selectElement1 = document.getElementById("culotemp");
+            var selectElement2 = document.getElementById("culorain");
+            var selectedvalue1 = result[0];
+            var selectedvalue2 = districtawait;
+            //console.log(selectedvalue2);
+            //console.log(selectedvalue1);
+            if (selectedvalue2 == 'Central and Western District'){
+              selectedvalue2 = 'Central & Western District';
+            }
+            if(selectedvalue2 == 'Tuen Mun District'){
+              selectedvalue2 = 'Tuen Mun';
+            }
+            if(selectedvalue2 == 'Yuen Long Park'){
+              selectedvalue2 = 'Yuen Long';
+            }
+            if(selectedvalue2 == 'Sha Tin District'){
+              selectedvalue2 = 'Sha Tin';
+            }
+            if(selectedvalue2 == 'Tai Po District'){
+              selectedvalue2 = 'Tai Po';
+            }
+            if(selectedvalue2 == 'Tsuen Wan District'){
+              selectedvalue2 = 'Tsuen Wan';
+            }
+            if(selectedvalue2 == 'Kwai Tsing District'){
+              selectedvalue2 = 'Kwai Tsing';
+            }
+            if(selectedvalue2 == 'Wong Tai Sin District'){
+              selectedvalue2 = 'Wong Tai Sin';
+            }
+            if(selectedvalue2 == 'Kwun Tong District'){
+              selectedvalue2 = 'Kwun Tong';
+            }
+            if(selectedvalue2 == 'Sham Shui Po District'){
+              selectedvalue2 = 'Sham Shui Po';
+            }
+            if(selectedvalue2 == 'Kowloon City District'){
+              selectedvalue2 = 'Kowloon City';
+            }
+            if(selectedvalue2 == 'Wan Chai District'){
+              selectedvalue2 = 'Wan Chai';
+            }
+            if(selectedvalue2 == 'Sai Kung District'){
+              selectedvalue2 = 'Sai Kung';
+            }
+            gottemp = findtemp(data, selectedvalue1, content="temperature");
+            var temp = document.createElement('div');
+            temp.innerHTML = '<div style="font-size: 40px; display:inline;">' + gottemp+ '</div>';
+            temp.innerHTML += '<div style="font-size: 20px; display:inline;">' + '\u00B0C' + '</div>';
+            selectElement1.appendChild(temp);
+            
+            gotrain = findrain(data, selectedvalue2, content="rainfall");
+            //console.log(gotrain);
+            var rainfall = document.createElement('p');
+            rainfall.innerHTML = '<div style="font-size: 40px;">' + gotrain + '</div>';
+            //rainfall.innerHTML = '<div style="font-size: 40px;">' + '99' + '</div>';
+            rainfall.innerHTML += '<div style="font-size: 20px;">' + "mm" + '</div>';
+            selectElement2.appendChild(rainfall);
+            var imageelement2 = document.createElement('img');
+            imageelement2.src = 'images/rain-48.png';
+            imageelement2.style.width = '20px';
+            imageelement2.style.height = '20px';
+            selectElement2.appendChild(imageelement2);
+            });  
+            function findtemp(data,selectedvalue,content){
 
-// 处理空气质量数据
-async function processAirQualityData(aqhiStations, position) {
-  try {
-    const nearestAQHIStation = findNearestAQHIStation(aqhiStations, position);
-    
-    if (nearestAQHIStation) {
-      const aqhiData = await getAirQualityData();
+              var data = data[content].data;
+              for (var i = 0; i < data.length; i++) {
+                var item = data[i];
+                if (item["place"] === selectedvalue) {
+                  return item.value;
+                }
+              }
+              return null;
+            };
+            function findrain(data,selectedvalue,content){
       
-      const stationData = aqhiData.find(item => item.station === nearestAQHIStation.name);
-      
-      if (stationData) {
-        updateAirQualityDisplay(stationData);
-        hideLoadingState('culoair');
-      } else {
-        showErrorMessage('空气质量数据不可用', 'culoair');
+              var data = data[content].data;
+              for (var i = 0; i < data.length; i++) {
+                var item = data[i];
+                //console.log(selectedvalue);
+                //console.log(item["place"]);
+                if (item["place"] === selectedvalue) {
+                  //console.log(item["place"]);
+                  return item.max;
+                }
+              }
+              return null;
+            };
+
+
+    })
+    function fetchaqir(){
+      //return fetch('data/aqhi-individual-Oct4.json')
+      return fetch('https://dashboard.data.gov.hk/api/aqhi-individual?format=json')
+        .then(response => response.json())
+        .then(data2 => {
+          return data2;
+        })
+        .catch(error => {
+          console.error('error:', error);
+          throw error;
+        });
+    }
+
+    async function getaqir() {
+      try {
+        const result = await fetchaqir();
+        return result;
+      } catch (error) {
+        console.error(error);
+        throw error;
       }
     }
-  } catch (error) {
-    console.error('Air quality data processing failed:', error);
-    showErrorMessage('空气质量数据加载失败', 'culoair');
-  }
-}
-
-// 更新温度显示（保持原有样式）
-function updateTemperatureDisplay(temperature) {
-  const culotemp = document.getElementById('culotemp');
-  culotemp.innerHTML = '';
-  
-  const temp = document.createElement('div');
-  temp.innerHTML = '<div style="font-size: 40px; display:inline;">' + temperature + '</div>';
-  temp.innerHTML += '<div style="font-size: 20px; display:inline;">' + '\u00B0C' + '</div>';
-  culotemp.appendChild(temp);
-}
-
-// 更新降雨量显示（保持原有样式）
-function updateRainfallDisplay(rainfall) {
-  const culorain = document.getElementById('culorain');
-  culorain.innerHTML = '';
-  
-  const rainfallDiv = document.createElement('p');
-  rainfallDiv.innerHTML = '<div style="font-size: 40px;">' + rainfall + '</div>';
-  rainfallDiv.innerHTML += '<div style="font-size: 20px;">' + "mm" + '</div>';
-  culorain.appendChild(rainfallDiv);
-  
-  const imageElement = document.createElement('img');
-  imageElement.src = 'images/rain-48.png';
-  imageElement.style.width = '20px';
-  imageElement.style.height = '20px';
-  culorain.appendChild(imageElement);
-}
-
-// 更新空气质量显示
-function updateAirQualityDisplay(aqhiData) {
-  const culoair = document.getElementById('culoair');
-  
-  // 清空现有内容
-  culoair.innerHTML = '';
-  
-  // 根据健康风险等级选择图标
-  const riskImageMap = {
-    'Low': 'images/aqhi-low.png',
-    'Moderate': 'images/aqhi-moderate.png',
-    'High': 'images/aqhi-high.png',
-    'Serious': 'images/aqhi-serious.png'
-  };
-  
-  const imageSrc = riskImageMap[aqhiData.health_risk];
-  if (imageSrc) {
-    const imageElement = document.createElement('img');
-    imageElement.src = imageSrc;
-    imageElement.style.width = '40px';
-    imageElement.style.height = '40px';
-    culoair.appendChild(imageElement);
-  }
-  
-  // 添加AQHI值和健康风险文本
-  const aqhiText = document.createElement('p');
-  aqhiText.innerHTML = aqhiData.aqhi + '<br>' + aqhiData.health_risk;
-  culoair.appendChild(aqhiText);
-}
-
-// 在数据中查找特定地点的信息
-function findDataByPlace(weatherData, place, dataType) {
-  if (!weatherData[dataType] || !weatherData[dataType].data) {
-    return null;
-  }
-  
-  for (let i = 0; i < weatherData[dataType].data.length; i++) {
-    const item = weatherData[dataType].data[i];
-    if (item.place === place) {
-      return item;
+    getaqir()
+    .then(data2 => {
+      fetch('data/aqhi-station-info.json')
+      .then(response => response.json())
+      .then(aqhistation => {
+        minaqhistation=logdata2(aqhistation);
+        
+        data2.forEach(function(item) {
+          //console.log(minaqhistation[0]);
+          if (item.station == minaqhistation[0]){
+            //console.log(item.health_risk);
+            if (item.health_risk == 'Low'){
+              aqhiimg = 'images/aqhi-low.png';
+              var imageelement = document.createElement('img');
+              imageelement.src = aqhiimg;
+              imageelement.style.width = '40px';
+              imageelement.style.height = '40px';
+              culoair.appendChild(imageelement);
+            }
+            else if (item.health_risk == 'Moderate'){
+              aqhiimg = 'images/aqhi-moderate.png';
+              var imageelement = document.createElement('img');
+              imageelement.src = aqhiimg;
+              imageelement.style.width = '40px';
+              imageelement.style.height = '40px';
+              culoair.appendChild(imageelement);
+            }
+            else if (item.health_risk == 'High'){
+              aqhiimg = 'images/aqhi-high.png';
+              var imageelement = document.createElement('img');
+              imageelement.src = aqhiimg;
+              imageelement.style.width = '40px';
+              imageelement.style.height = '40px';
+              culoair.appendChild(imageelement);
+            }
+            else if (item.health_risk == 'Serious'){
+              aqhiimg = 'images/aqhi-serious.png';
+              var imageelement = document.createElement('img');
+              imageelement.src = aqhiimg;
+              imageelement.style.width = '40px';
+              imageelement.style.height = '40px';
+              culoair.appendChild(imageelement); 
+            }
+            var aqhi = document.createElement('p');
+            aqhi.innerHTML = item.aqhi +'<br>' + item.health_risk;
+            culoair.appendChild(aqhi);
+            //document.getElementById('culoair').innerHTML = item.aqhi;
+          }
+      })
+      // .catch(error => {
+      //   console.error('error:', error);
+      //   throw error;
+      // });
+    })
+    function logdata2(data) {
+      var stationlist = [];
+      data.forEach(function(item) {
+        var station = [];
+        const λ2 = item.lng * Math.PI / 180;
+        const φ2 = item.lat * Math.PI / 180;
+        const λ1 = longitude * Math.PI / 180;
+        const φ1 = latitude * Math.PI / 180;
+        const x = (λ2 - λ1) * Math.cos((φ1 + φ2) / 2);
+        const y = (φ2 - φ1);
+        const d = Math.sqrt(x * x + y * y);
+        station.push(item.station);
+        station.push(d);
+        stationlist.push(station);
+      });
+      var minstation = [stationlist[0][0], stationlist[0][1]];
+      for (var i = 0; i < stationlist.length; i++) {
+        if (stationlist[i][1] < minstation[1]) {
+          minstation[0] = stationlist[i][0];
+          minstation[1] = stationlist[i][1];
+        }
+      }
+      
+      return minstation;
     }
-  }
-  return null;
-}
-
-// 启动应用 - 替换原来的getLocation()调用
-document.addEventListener('DOMContentLoaded', function() {
-  // 延迟一点启动，确保DOM完全加载
-  setTimeout(initializeWeatherPage, 100);
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  })
 });
+
+
+
