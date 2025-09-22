@@ -1,0 +1,95 @@
+{
+  "stations": [
+    {
+      "id": "central",
+      "name": "Central",
+      "name_zh": "中环",
+      "location": {
+        "lat": 22.2819,
+        "lng": 114.1583
+      },
+      "region": "Hong Kong Island"
+    },
+    {
+      "id": "causeway_bay",
+      "name": "Causeway Bay",
+      "name_zh": "铜锣湾",
+      "location": {
+        "lat": 22.2800,
+        "lng": 114.1850
+      },
+      "region": "Hong Kong Island"
+    },
+    {
+      "id": "mong_kok",
+      "name": "Mong Kok",
+      "name_zh": "旺角",
+      "location": {
+        "lat": 22.3193,
+        "lng": 114.1694
+      },
+      "region": "Kowloon"
+    },
+    {
+      "id": "tsim_sha_tsui",
+      "name": "Tsim Sha Tsui",
+      "name_zh": "尖沙咀",
+      "location": {
+        "lat": 22.2980,
+        "lng": 114.1722
+      },
+      "region": "Kowloon"
+    },
+    {
+      "id": "sha_tin",
+      "name": "Sha Tin",
+      "name_zh": "沙田",
+      "location": {
+        "lat": 22.3818,
+        "lng": 114.1877
+      },
+      "region": "New Territories"
+    },
+    {
+      "id": "tai_po",
+      "name": "Tai Po",
+      "name_zh": "大埔",
+      "location": {
+        "lat": 22.4508,
+        "lng": 114.1636
+      },
+      "region": "New Territories"
+    },
+    {
+      "id": "tuen_mun",
+      "name": "Tuen Mun",
+      "name_zh": "屯门",
+      "location": {
+        "lat": 22.3910,
+        "lng": 113.9760
+      },
+      "region": "New Territories"
+    },
+    {
+      "id": "yuen_long",
+      "name": "Yuen Long",
+      "name_zh": "元朗",
+      "location": {
+        "lat": 22.4460,
+        "lng": 114.0342
+      },
+      "region": "New Territories"
+    },
+    {
+      "id": "tung_chung",
+      "name": "Tung Chung",
+      "name_zh": "东涌",
+      "location": {
+        "lat": 22.2889,
+        "lng": 113.9430
+      },
+      "region": "Islands"
+    }
+  ],
+  "last_updated": "2024-01-01T00:00:00Z"
+}
