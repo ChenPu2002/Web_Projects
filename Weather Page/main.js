@@ -888,8 +888,13 @@ function findNearestAQHIStation(stations, position) {
   let minDistance = Infinity;
   
   stations.forEach(function(item) {
-    const λ2 = item.lng * Math.PI / 180;
-    const φ2 = item.lat * Math.PI / 180;
+    // 处理不同的数据结构：新格式使用location对象，旧格式直接使用lat/lng
+    const stationLat = item.location ? item.location.lat : item.lat;
+    const stationLng = item.location ? item.location.lng : item.lng;
+    const stationName = item.name || item.station;
+    
+    const λ2 = stationLng * Math.PI / 180;
+    const φ2 = stationLat * Math.PI / 180;
     const λ1 = longitude * Math.PI / 180;
     const φ1 = latitude * Math.PI / 180;
     const x = (λ2 - λ1) * Math.cos((φ1 + φ2) / 2);
@@ -898,7 +903,7 @@ function findNearestAQHIStation(stations, position) {
     
     if (distance < minDistance) {
       minDistance = distance;
-      minStation = { name: item.station, distance: distance };
+      minStation = { name: stationName, distance: distance };
     }
   });
   
@@ -1028,7 +1033,9 @@ async function initializeWeatherPage() {
 // 处理空气质量数据
 async function processAirQualityData(aqhiStations, position) {
   try {
-    const nearestAQHIStation = findNearestAQHIStation(aqhiStations, position);
+    // 确保传递的是stations数组而不是整个对象
+    const stations = aqhiStations.stations || aqhiStations;
+    const nearestAQHIStation = findNearestAQHIStation(stations, position);
     
     if (nearestAQHIStation) {
       const aqhiData = await getAirQualityData();
